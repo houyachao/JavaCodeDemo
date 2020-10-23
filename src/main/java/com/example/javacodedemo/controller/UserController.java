@@ -6,6 +6,7 @@ import com.example.javacodedemo.domain.dto.UserDTO;
 import com.example.javacodedemo.domain.dto.UserQueryDTO;
 import com.example.javacodedemo.service.ExcelExportService;
 import com.example.javacodedemo.util.InsertValidationGroup;
+import com.example.javacodedemo.util.JWTUtils;
 import io.swagger.annotations.*;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +21,8 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author HouYC
@@ -39,12 +42,30 @@ public class UserController {
     @Autowired
     private ExcelExportService excelExportService;
 
+    @PostMapping("/login")
+    public ResponseResult login(@RequestBody UserDTO userDTO) {
+
+        Map<String, Object> payLoad = new HashMap<>();
+        payLoad.put("userName", userDTO.getUserName());
+        payLoad.put("age", userDTO.getAge());
+
+        String token = JWTUtils.getToken(payLoad);
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("token", token);
+
+        return ResponseResult.success(map);
+    }
+
+
+
     /**
      * 用户导出
      * @param query
      * @param fileName
      * @return
      */
+    @GetMapping("/export")
     public ResponseResult<Boolean> export(@Validated UserQueryDTO query, @NotEmpty String fileName) {
 
         excelExportService.export(query, fileName);
@@ -129,6 +150,9 @@ public class UserController {
                                             @Validated @RequestBody UserQueryDTO query) {
 
         log.info("未使用缓存");
+
+        // 根据JWT  token 获取用户信息
+
         return ResponseResult.success(new PageResult());
     }
 
